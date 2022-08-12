@@ -18,26 +18,12 @@ function FilterBox() {
   
   const prices = ["<$100","$100-$200","$200-$600","$600-$1000",">$1000"]
 
-  useEffect(()=>{
-    if(products.length>0 && search!==""){
-      setSelectedBrand(new Set())
-      setSelectedCategory(new Set())
-      setSelectedPrice(new Set())
-      
-      const filteredProducts = products.filter(product=>{
-        // console.log(product.title.match(new RegExp(`/^i.*$/`)))
-        // console.log(product.title.match(/^i.*$/))
-        // if(!product.title.match(/^{search}.*$/)) return false
-        // return true
-      })
-      setSelectedProduct(filteredProducts)
-    }
-  },[products,search])
   const set = ()=>{
     if (
       products.length > 0 &&
       (selectedCategory.size !== 0 || selectedBrand.size !== 0 || selectedPrice.size !== 0)
       ) {
+        setSearch("")
         const filteredProducts = products.filter(product => {
             if(selectedBrand.size!==0) {
                 if (!selectedBrand.has(product.brand)) return false
@@ -66,10 +52,30 @@ function FilterBox() {
         })
         setSelectedProduct(filteredProducts)
       }
-      if(products.length > 0 && selectedCategory.size === 0 && selectedBrand.size === 0 && selectedPrice.size === 0) {
+      if(products.length > 0 && selectedCategory.size === 0 && selectedBrand.size === 0 && selectedPrice.size === 0 && search==="") {
         setSelectedProduct(products)
       }
   }
+
+  const searchChange = ()=>{
+   if(products.length>0 && search!==""){
+      setSelectedBrand(new Set())
+      setSelectedCategory(new Set())
+      setSelectedPrice(new Set())
+      
+      const filteredProducts = products.filter(product=>{
+        return (String(product?.title).toLowerCase().indexOf(search.toLowerCase())===0)
+      })
+      setSelectedProduct(filteredProducts)
+    }
+    if(products.length>0 && search==="" && selectedCategory.size===0 && selectedBrand.size===0 && selectedPrice.size===0) {
+      setSelectedProduct(products)
+    }
+  }
+
+  useEffect(()=>{
+    searchChange();
+  },[search])
 
   useEffect(()=>{
     set()
