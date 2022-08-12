@@ -2,7 +2,7 @@ import { atom } from "recoil";
 
 const rankState = atom({
   key: "rank",
-  default: "",
+  default: "sort",
 });
 
 const searchState = atom({

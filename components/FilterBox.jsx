@@ -2,8 +2,13 @@ import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import { useEffect } from "react";
 import { useRecoilState } from "recoil";
 import { productState, brandState, categoryState } from "../atoms/products";
-import { searchState } from "../atoms/rankSearch";
-import { selectedBrandState, selectedCategoryState, selectedPriceState, selectedProductState } from "../atoms/selectedProducts";
+import { rankState, searchState } from "../atoms/rankSearch";
+import {
+  selectedBrandState,
+  selectedCategoryState,
+  selectedPriceState,
+  selectedProductState,
+} from "../atoms/selectedProducts";
 import Filters from "./Filters";
 
 function FilterBox() {
@@ -11,146 +16,185 @@ function FilterBox() {
   const [brands, setBrands] = useRecoilState(brandState);
   const [categories, setCategories] = useRecoilState(categoryState);
   const [selectedBrand, setSelectedBrand] = useRecoilState(selectedBrandState);
-  const [selectedCategory, setSelectedCategory] = useRecoilState(selectedCategoryState);
+  const [selectedCategory, setSelectedCategory] = useRecoilState(
+    selectedCategoryState
+  );
   const [selectedPrice, setSelectedPrice] = useRecoilState(selectedPriceState);
-  const [selectedProduct, setSelectedProduct] = useRecoilState(selectedProductState);
-  const [search, setSearch] = useRecoilState(searchState)
-  
-  const prices = ["<$100","$100-$200","$200-$600","$600-$1000",">$1000"]
+  const [selectedProduct, setSelectedProduct] =
+    useRecoilState(selectedProductState);
+  const [search, setSearch] = useRecoilState(searchState);
+  const [rank, setRank] = useRecoilState(rankState);
 
-  const set = ()=>{
+  const prices = ["<$100", "$100-$200", "$200-$600", "$600-$1000", ">$1000"];
+
+  const set = () => {
     if (
       products.length > 0 &&
-      (selectedCategory.size !== 0 || selectedBrand.size !== 0 || selectedPrice.size !== 0)
-      ) {
-        setSearch("")
-        const filteredProducts = products.filter(product => {
-            if(selectedBrand.size!==0) {
-                if (!selectedBrand.has(product.brand)) return false
-            }        
-            if(selectedCategory.size!==0) {
-                if (!selectedCategory.has(product.category)) return false
-            }        
-            if(selectedPrice.size!==0) {
-                if (selectedPrice.has("<$100")){
-                  return product.price <= 100
-                }
-                if (selectedPrice.has("$100-$200")){
-                  return product.price >= 100 && product.price <= 200
-                }
-                if (selectedPrice.has("$200-$600")){
-                  return product.price >= 200 && product.price <= 600
-                }
-                if (selectedPrice.has("$600-$1000")){
-                  return product.price >= 600 && product.price <= 1000
-                }
-                if (selectedPrice.has(">$1000")){
-                  return product.price >= 1000
-                }
-            }  
-            return true      
-        })
-        setSelectedProduct(filteredProducts)
-      }
-      if(products.length > 0 && selectedCategory.size === 0 && selectedBrand.size === 0 && selectedPrice.size === 0 && search==="") {
-        setSelectedProduct(products)
-      }
-  }
-
-  const searchChange = ()=>{
-   if(products.length>0 && search!==""){
-      setSelectedBrand(new Set())
-      setSelectedCategory(new Set())
-      setSelectedPrice(new Set())
-      
-      const filteredProducts = products.filter(product=>{
-        return (String(product?.title).toLowerCase().indexOf(search.toLowerCase())===0)
-      })
-      setSelectedProduct(filteredProducts)
+      (selectedCategory.size !== 0 ||
+        selectedBrand.size !== 0 ||
+        selectedPrice.size !== 0)
+    ) {
+      setSearch("");
+      const filteredProducts = products.filter((product) => {
+        if (selectedBrand.size !== 0) {
+          if (!selectedBrand.has(product.brand)) return false;
+        }
+        if (selectedCategory.size !== 0) {
+          if (!selectedCategory.has(product.category)) return false;
+        }
+        if (selectedPrice.size !== 0) {
+          if (selectedPrice.has("<$100")) {
+            return product.price <= 100;
+          }
+          if (selectedPrice.has("$100-$200")) {
+            return product.price >= 100 && product.price <= 200;
+          }
+          if (selectedPrice.has("$200-$600")) {
+            return product.price >= 200 && product.price <= 600;
+          }
+          if (selectedPrice.has("$600-$1000")) {
+            return product.price >= 600 && product.price <= 1000;
+          }
+          if (selectedPrice.has(">$1000")) {
+            return product.price >= 1000;
+          }
+        }
+        return true;
+      });
+      setSelectedProduct(filteredProducts);
     }
-    if(products.length>0 && search==="" && selectedCategory.size===0 && selectedBrand.size===0 && selectedPrice.size===0) {
-      setSelectedProduct(products)
+    if (
+      products.length > 0 &&
+      selectedCategory.size === 0 &&
+      selectedBrand.size === 0 &&
+      selectedPrice.size === 0 &&
+      search === ""
+    ) {
+      setSelectedProduct(products);
     }
-  }
+  };
 
-  useEffect(()=>{
+  useEffect(() => {
+    if (rank === "phtl") {
+      setSelectedProduct((prevSelectedProduct) => {
+        return prevSelectedProduct.slice().sort((a, b) => {
+          if (a.price < b.price) return 1;
+          else return -1;
+        });
+      });
+    } 
+    else if (rank === "plth") {
+      setSelectedProduct((prevSelectedProduct) => {
+        return prevSelectedProduct.slice().sort((a, b) => {
+          if (
+            a.price>b.price
+          )
+            return 1;
+          else return -1;
+        });
+      });
+    }
+  }, [rank]);
+
+  const searchChange = () => {
+    if (products.length > 0 && search !== "") {
+      setSelectedBrand(new Set());
+      setSelectedCategory(new Set());
+      setSelectedPrice(new Set());
+
+      const filteredProducts = products.filter((product) => {
+        return (
+          String(product?.title).toLowerCase().indexOf(search.toLowerCase()) ===
+          0
+        );
+      });
+      setSelectedProduct(filteredProducts);
+    }
+    if (
+      products.length > 0 &&
+      search === "" &&
+      selectedCategory.size === 0 &&
+      selectedBrand.size === 0 &&
+      selectedPrice.size === 0
+    ) {
+      setSelectedProduct(products);
+    }
+  };
+
+  useEffect(() => {
     searchChange();
-  },[search])
+  }, [search]);
 
-  useEffect(()=>{
-    set()
-  },[products,selectedBrand,selectedCategory,selectedPrice])
+  useEffect(() => {
+    set();
+  }, [products, selectedBrand, selectedCategory, selectedPrice]);
 
   const addBrand = async (brand) => {
-    if(selectedBrand.has(brand)){
-      setSelectedBrand(prevSelectedBrand=>{
-        const newBrand = new Set()
-        prevSelectedBrand.forEach((oldBrand)=>{
-          if(oldBrand!==brand) newBrand.add(oldBrand)
-        })
+    if (selectedBrand.has(brand)) {
+      setSelectedBrand((prevSelectedBrand) => {
+        const newBrand = new Set();
+        prevSelectedBrand.forEach((oldBrand) => {
+          if (oldBrand !== brand) newBrand.add(oldBrand);
+        });
 
-        return newBrand
+        return newBrand;
+      });
+    } else {
+      setSelectedBrand((prevSelectedBrand) => {
+        const newBrand = new Set();
+        prevSelectedBrand.forEach((oldBrand) => {
+          newBrand.add(oldBrand);
+        });
+        newBrand.add(brand);
+
+        return newBrand;
       });
     }
-    else{
-      setSelectedBrand(prevSelectedBrand=>{
-        const newBrand = new Set()
-        prevSelectedBrand.forEach((oldBrand)=>{
-          newBrand.add(oldBrand)
-        })
-        newBrand.add(brand)
-
-        return newBrand
-      });
-    }
-  }
+  };
 
   const addCategory = (category) => {
-    if(selectedCategory.has(category)){
-      setSelectedCategory(prevSelectedCategory=>{
-        const newCategory = new Set()
-        prevSelectedCategory.forEach((oldCategory)=>{
-          if(oldCategory!==category) newCategory.add(oldCategory)
-        })
-        return newCategory
+    if (selectedCategory.has(category)) {
+      setSelectedCategory((prevSelectedCategory) => {
+        const newCategory = new Set();
+        prevSelectedCategory.forEach((oldCategory) => {
+          if (oldCategory !== category) newCategory.add(oldCategory);
+        });
+        return newCategory;
+      });
+    } else {
+      setSelectedCategory((prevSelectedCategory) => {
+        const newCategory = new Set();
+        prevSelectedCategory.forEach((oldCategory) => {
+          newCategory.add(oldCategory);
+        });
+        newCategory.add(category);
+
+        return newCategory;
       });
     }
-    else{
-      setSelectedCategory(prevSelectedCategory=>{
-        const newCategory = new Set()
-        prevSelectedCategory.forEach((oldCategory)=>{
-          newCategory.add(oldCategory)
-        })
-        newCategory.add(category)
-
-        return newCategory
-    });
-    }
-  }
+  };
 
   const addPrice = (price) => {
-    if(selectedPrice.has(price)){
-      setSelectedPrice(prevSelectedPrice=>{
-        const newPrice = new Set()
-        prevSelectedPrice.forEach((oldPrice)=>{
-          if(oldPrice!==price) newPrice.add(oldPrice)
-        })
-        return newPrice
+    if (selectedPrice.has(price)) {
+      setSelectedPrice((prevSelectedPrice) => {
+        const newPrice = new Set();
+        prevSelectedPrice.forEach((oldPrice) => {
+          if (oldPrice !== price) newPrice.add(oldPrice);
+        });
+        return newPrice;
+      });
+    } else {
+      setSelectedPrice((prevSelectedPrice) => {
+        const newPrice = new Set();
+        prevSelectedPrice.forEach((oldPrice) => {
+          newPrice.add(oldPrice);
+        });
+
+        newPrice.add(price);
+        return newPrice;
       });
     }
-    else{
-      setSelectedPrice(prevSelectedPrice=>{
-        const newPrice = new Set()
-        prevSelectedPrice.forEach((oldPrice)=>{
-          newPrice.add(oldPrice)
-        })
-
-        newPrice.add(price)
-        return newPrice
-      });      
-    }
-  }
-
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -179,13 +223,28 @@ function FilterBox() {
         <FormatListBulletedIcon />
       </div>
       {brands.length !== 0 && (
-        <Filters filterName="Brand" filters={brands} addItem={addBrand} selectedFilters={selectedBrand} />
+        <Filters
+          filterName="Brand"
+          filters={brands}
+          addItem={addBrand}
+          selectedFilters={selectedBrand}
+        />
       )}
       {categories.length !== 0 && (
-        <Filters filterName="Category" filters={categories} addItem={addCategory} selectedFilters={selectedCategory} />
+        <Filters
+          filterName="Category"
+          filters={categories}
+          addItem={addCategory}
+          selectedFilters={selectedCategory}
+        />
       )}
       {prices.length !== 0 && (
-        <Filters filterName="Price" filters={prices} addItem={addPrice} selectedFilters={selectedPrice} />
+        <Filters
+          filterName="Price"
+          filters={prices}
+          addItem={addPrice}
+          selectedFilters={selectedPrice}
+        />
       )}
     </>
   );
